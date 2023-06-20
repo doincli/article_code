@@ -9,7 +9,7 @@
 %-------------------------------版本说明-------------------------------%
 
 %{
-
+                                         
 1.在V2版本的基础上加入混沌噪声的BER   
 2.分析了4种激光器的线宽，分别为500 800 1200 2000KHz
 3.在V3版本的基础上加入 强湍流 弱湍流 还有夜视情况下的大气湍流 PDF 两重积分 单独一重pdf不等于0
@@ -104,7 +104,7 @@ F_n=1;                           %探测器噪声因子
 Pt = (P1 + Ps);                                    %混沌掩盖比的光功率
 r = 0;                                               %不考虑对准误差
 I_0L = alpha .* Pt .*GEDFA1.* Dr.^2 ./ (2 .* W.^2);  %大气链路的损耗,经过EDFA2之前
-
+ 
 alphabeta = Dr.^2 ./ (2 .* W.^2);
 
 %-------------------------------  大气光强闪烁参数计算   -------------------------------%
@@ -166,17 +166,17 @@ PIji = integral(prI,10^-15,3*10^-5)
 
 %画图调试
 
-% figure;
-% plot(I,Pr_I_qiang1);
-% 
-% hold on ; 
-% plot(I,Pr_I_qiang2);
-% plot(I,Pr_I_ruo);
-% plot(I,Pr_I_dark);
-% %plot(I,log10(Pr_I_ruo));                          %用来确定I的积分范围
-% title("强湍流和弱湍流,夜视情况下的PDF");
-% legend("强湍流","弱湍流","夜视");
-% hold off;
+figure;
+plot(I,Pr_I_qiang1);
+
+hold on ; 
+plot(I,Pr_I_qiang2);
+plot(I,Pr_I_ruo);
+plot(I,Pr_I_dark);
+%plot(I,log10(Pr_I_ruo));                          %用来确定I的积分范围
+title("强湍流和弱湍流,夜视情况下的PDF");
+legend("强湍流","弱湍流","夜视");
+hold off;
 
 % figure;
 % plot(I,log10(Pr_I_qiang1));
@@ -207,7 +207,7 @@ V2 = 4.2;%接收端VpiRF
 GEDFA2 = 1/(GEDFA1*alphabeta*(P1/P2));
 A1 = 100;
 A2 = A1;
-G_shuaijian = 10^-1.62;  %光衰减器      %-14db大小的衰减器
+G_shuaijian = 10^-5.5;  %光衰减器      %-14db大小的衰减器
 betaemi = pi*1/4*RF1*yita1*P1*A1/(2*V1)*G_shuaijian;
 betarec = pi*1/2*RF2*yita2*A2*GEDFA2./(1+maskeff) .* I ./ (2*V2)*G_shuaijian;
 deltabetarate = abs(betaemi - betarec) ./ betaemi;
@@ -239,7 +239,7 @@ n_rms=1/2.*K.^2.*(yipsen_2+deltafai^2+1/4*(deltaK/K_1).^2);  %失配噪声
 
 AAA=(yipsen_2 + deltafai^2+0.25*(deltaK/K_1).^2);
  %梯形积分，计算相关BER
-
+ 
 pr_I  = Pr_I_dark';
 pr_I1 = Pr_I_ruo';
 pr_I2 = Pr_I_qiang1';
@@ -255,10 +255,6 @@ pr_I3 = Pr_I_qiang2';
   loghundun_ruo= log10(hundun_ruo);
   loghundun_qiang1= log10(hundun_qiang1);
   loghundun_qiang2= log10(hundun_qiang2);
-  guangqiang_dark = I*[pr_I(1)./2;pr_I(2:num-1);pr_I(num)./2].* dI 
-  guangqiang1_ruo = I*[pr_I1(1)./2;pr_I1(2:num-1);pr_I1(num)./2].* dI 
-  guangqiang2_qiang1 = I*[pr_I2(1)./2;pr_I2(2:num-1);pr_I2(num)./2].* dI
-  guangqiang3_qiang2 = I*[pr_I3(1)./2;pr_I3(2:num-1);pr_I3(num)./2].* dI 
 %plot(I,n_rms);                      %不是以P2为中心 会产生一定的偏移
 %%
 % plot(I,AAA);   
@@ -303,7 +299,7 @@ phi = -0.5:0.001:0.5;                            %激光器相位噪声
 % 
 % %--------------------------------静态BER的计算-----------------------------------%
 
-delta_v=linspace(1,8000,1500)*10^3;  
+delta_v=linspace(1,800,200)*10^3;  
 BER_p = zeros(length(signal_power),length(delta_v));
 beiji = zeros(1,length(phi));
 
@@ -312,7 +308,7 @@ phase_noise= zeros(1,length(delta_v));
 noise =zeros(length(signal_power),length(delta_v));
 SNR = zeros(length(signal_power),length(delta_v));   
 for j = 1:length(signal_power)
-phase_noise = signal_power(j)./2.*(1-exp(-8*pi*delta_v*Ts));
+phase_noise = signal_power(j)*sqrt(pi).*(1-exp(-8*pi*delta_v*Ts));
 noise(j,:) =(sita_s1(j)+sita_s2(j)+2*sita_T+phase_noise+n_rms(j));%
 SNR(j,:) = signal_power(j)./(sita_s1(j)+sita_s2(j)+2*sita_T+phase_noise+n_rms(j));%
 BER_p(j,:) =1/2*erfc((SNR(j,:)/2).^0.5);    
@@ -321,7 +317,7 @@ end
 %%
 phase_noise1= zeros(length(delta_v),length(signal_power));
 for j = 1:length(signal_power)
-phase_noise1(:,j) = signal_power(j)./2.*(1-exp(-8*pi*delta_v*Ts));
+phase_noise1(:,j) = signal_power(j)*sqrt(pi).*(1-exp(-8*pi*delta_v*Ts));
 end
 %%
 phase_dark =zeros(1,length(delta_v));
@@ -334,19 +330,19 @@ phase_ruo(1,i) = phase_noise1(i,:)*[pr_I1(1)./2;pr_I1(2:num-1);pr_I1(num)./2].* 
 phase_qiang1(1,i) = phase_noise1(i,:)*[pr_I2(1)./2;pr_I2(2:num-1);pr_I2(num)./2].* dI;
 phase_qiang2 (1,i)= phase_noise1(i,:)*[pr_I3(1)./2;pr_I3(2:num-1);pr_I3(num)./2].* dI;
 end
-% figure;
-% hold on;
-% plot(delta_v,log10(phase_dark));
-% plot(delta_v,log10(phase_ruo));
-% plot(delta_v,log10(phase_qiang1));
-% plot(delta_v,log10(phase_qiang2));
-% % plot(delta_v,phase_dark);
-% % plot(delta_v,phase_ruo);
-% % plot(delta_v,phase_qiang1);
-% % plot(delta_v,phase_qiang2);
-% hold off;
-% legend('phase_dark','phase_ruo','phase_qiang1',...
-% 'phase_qiang2')
+figure;
+hold on;
+plot(delta_v,log10(phase_dark));
+plot(delta_v,log10(phase_ruo));
+plot(delta_v,log10(phase_qiang1));
+plot(delta_v,log10(phase_qiang2));
+% plot(delta_v,phase_dark);
+% plot(delta_v,phase_ruo);
+% plot(delta_v,phase_qiang1);
+% plot(delta_v,phase_qiang2);
+hold off;
+legend('phase_dark','phase_ruo','phase_qiang1',...
+'phase_qiang2')
 %%
 
 BER = BER_p';
@@ -378,45 +374,42 @@ end
 % plot(I,SNR) ;hold on;plot(I,Pr_I_dark);plot(I,Pr_I_ruo);
 % plot(I,Pr_I_qiang1);plot(I,Pr_I_qiang2);
 %%
-% figure;
-% % plot(log10(n_rms)); 
-% plot(n_rms); 
-% title("混沌噪声");
-% 
-% %%
-% figure;
-% hold on;
-% plot(I,Pr_I_dark);
-% 
-% plot(Pr_I_ruo);
-% plot(Pr_I_qiang1);plot(Pr_I_qiang2);
-% title("PDF");
-% %%
-% figure;
-% % plot(delta_v,log10(phase_noise))
-% plot(delta_v,phase_noise)
-% title("相位噪声");
+figure;
+% plot(log10(n_rms)); 
+plot(n_rms); 
+title("混沌噪声");
+
+%%
+figure;
+hold on;
+plot(I,Pr_I_dark);
+
+plot(Pr_I_ruo);
+plot(Pr_I_qiang1);plot(Pr_I_qiang2);
+title("PDF");
+%%
+figure;
+ plot(delta_v,log10(phase_noise))
+%plot(delta_v,phase_noise)
+title("相位噪声");
 %%
 delta_v1 = delta_v / 1000;
 figure;
 hold on;
 box on;
-plot(delta_v1,log10(BPSK_BER_dark),'-d','MarkerIndices',1:100:length(delta_v1),'LineWidth',2.5,'Color',[0.70 0.55 0.4]);
-plot(delta_v1,log10(BPSK_BER_ruo),'->','MarkerIndices',1:100:length(delta_v1),'LineWidth',2.5,'Color',[0.2 0.6 0.1]);
-plot(delta_v1,log10(BPSK_BER_qiang1),'-p','MarkerIndices',1:100:length(delta_v1),'LineWidth',2.5,'Color',[0.02 0.7 0.7]);
-plot(delta_v1,log10(BPSK_BER_qiang2),'-+','MarkerIndices',1:100:length(delta_v1),'LineWidth',2.5,'Color',[0.8 0.02 0.8]);
+plot(delta_v1,log10(BPSK_BER_dark),'*-','LineWidth',2);
+plot(delta_v1,log10(BPSK_BER_ruo),'o-','LineWidth',2);
+plot(delta_v1,log10(BPSK_BER_qiang1),'diamond-','LineWidth',2);
+plot(delta_v1,log10(BPSK_BER_qiang2),'square-','LineWidth',2);
 % title("强湍流和弱湍流,夜视情况下的PDF(log)");
-set(gca,'linewidth',1.5)
-xlabel('Linewidth \Deltav/kHz');
-% xlabel('Linewidth \Deltav/kHz','FontWeight','bold');
-ylabel('lg(BER)');
-%ylabel('lg(BER)','FontWeight','bold');
-set(gca,'FontSize',20);
-set(gca,'Fontname','Times New Roman');
+set(gca,'linewidth',1)
+xlabel('Linewidth \Deltav/kHz','FontWeight','bold');
+ylabel('lg(BER)','FontWeight','bold');
+set(gca,'FontSize',20,'FontWeight','bold');
 legend('\sigma_I^2=0.05','\sigma_I^2=0.10','\sigma_I^2=0.15',...
-'\sigma_I^2=0.20','NumColumns',1,'FontSize',20')
+'\sigma_I^2=0.20','NumColumns',1,'FontSize',18')
 % ylim([-10 -2])
-xlim([0*10^3 8000]);
+  xlim([0*10^3 800]);
 hold off;
 % xp=0;
 % yp=0;
